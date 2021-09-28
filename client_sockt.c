@@ -27,6 +27,7 @@ void sockt_cli_init(Sockt_cli *skt, char *host, uint16_t port){
 	memset(&(end_info.sin_zero), 8, sizeof(int));
 	size_t tam = sizeof(struct sockaddr);
 	if (connect(skt->fd, (struct sockaddr *)&end_info, tam) == -1){
+		close(skt->fd);
 		perror("falla de conexión");
 		exit(1);
 	}
