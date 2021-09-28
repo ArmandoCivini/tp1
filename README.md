@@ -1,4 +1,6 @@
 # tp1
+## Amando Tomás Civini
+## https://github.com/ArmandoCivini/tp1.git
 Para este TP se usó c en su totalidad. Haciendo uso de sus structs se crearon 3 tipos de datos abstractos con sus respectivas funciones para simplificar y construir el trabajo por bloques. En el siguiente diagrama se muestra los tipo de datos abstractos usados y en donde son dependencia.
 
 ![diagrama estructural](diagrama_dep.png)
