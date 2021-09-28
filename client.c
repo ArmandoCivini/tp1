@@ -15,7 +15,7 @@ void terminar_partida_ganar(){
 	printf("Ganaste!!\n");
 }
 
-uint8_t adivinar_char(Sockt_cli *skt, char *c, uint16_t pal_len){
+uint8_t adivinar_char(Sockt_cli *skt, char *c, const uint16_t pal_len){
 	sockt_cli_write(skt, c, 1);
 	char buf[pal_len+4];
 	sockt_cli_read(skt, buf, pal_len+3);
