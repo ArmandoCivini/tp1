@@ -55,6 +55,9 @@ void jugar_ahorcado(Sockt_cli *skt){
 	while(intentos < 128){
 		size_t input_len = getline(&input, &size, stdin);
 		for (int i = 0; i < input_len-1; ++i){
+			if (intentos >= 128){
+				break;
+			}
 			intentos = adivinar_char(skt, &input[i], pal_len);
 		}
 	}
