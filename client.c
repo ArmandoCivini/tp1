@@ -5,7 +5,7 @@ void juego_print(char *pal, uint8_t intentos){
 	printf("Palabra secreta: %s\n", pal);
 	int intent_p = intentos;
 	printf("Te quedan %d intentos\n", intent_p);
-	printf("Ingrese letra: ");
+	printf("Ingrese letra: \n");
 }
 
 void terminar_partida_perder(char *pal){

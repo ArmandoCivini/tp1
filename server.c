@@ -38,7 +38,7 @@ bool juego_loop(Sockt_srv *skt, Ahorcado *aho, int intent, uint16_t len){
 void print_recrd(int victorias, int derrotas){
 	printf("Resumen:\n");
 	printf("	Victorias: %d\n", victorias);
-	printf("	derrotas: %d\n", derrotas);
+	printf("	Derrotas: %d\n", derrotas);
 }
 
 void empezar_juego(char *file, int port, int intentos){
