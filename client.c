@@ -3,7 +3,8 @@
 
 void juego_print(char *pal, uint8_t intentos){
 	printf("Palabra secreta: %s\n", pal);
-	printf("Te quedan %hu intentos\n", (uint8_t)intentos);
+	int intent_p = intentos;
+	printf("Te quedan %d intentos\n", intent_p);
 	printf("Ingrese letra: ");
 }
 
