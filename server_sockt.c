@@ -20,7 +20,7 @@ void sockt_srv_init(Sockt_srv *skt, uint16_t port, int max_q){
 	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = INADDR_ANY;
 	socklen_t sockaddr_size = (socklen_t)sizeof(struct sockaddr);
-	if ( bind( skt->fd,(struct sockaddr *)&addr, sockaddr_size) == -1 ){
+	if ( bind(skt->fd,(struct sockaddr *)&addr, sockaddr_size) == -1 ){
 		perror("union socket server");
 		exit(1);
 	}
