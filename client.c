@@ -17,7 +17,7 @@ void terminar_partida_ganar(){
 
 uint8_t adivinar_char(Sockt_cli *skt, char *c, const uint16_t pal_len){
 	sockt_cli_write(skt, c, 1);
-	char buf[pal_len+4];
+	char *buf = malloc((pal_len+4)*sizeof(char));
 	sockt_cli_read(skt, buf, pal_len+3);
 	buf[pal_len+3] = '\0';
 	uint8_t intentos = (uint8_t)buf[0];
@@ -31,6 +31,7 @@ uint8_t adivinar_char(Sockt_cli *skt, char *c, const uint16_t pal_len){
 			terminar_partida_ganar();
 		}
 	}
+	free(buf);
 	return intentos;
 }
 
