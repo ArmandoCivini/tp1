@@ -54,6 +54,9 @@ void jugar_ahorcado(Sockt_cli *skt){
 	juego_print(&buf[3], intentos);
 	while(intentos < 128){
 		size_t input_len = getline(&input, &size, stdin);
+		if (input_len == 1){
+			juego_print(&buf[3], intentos);
+		}
 		for (int i = 0; i < input_len-1; ++i){
 			if (intentos >= 128){
 				break;
