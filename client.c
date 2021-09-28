@@ -3,7 +3,7 @@
 
 void juego_print(char *pal, uint8_t intentos){
 	printf("Palabra secreta: %s\n", pal);
-	printf("Te quedan %hu intentos\n", intentos);
+	printf("Te quedan %hu intentos\n", (uint8_t)intentos);
 	printf("Ingrese letra: ");
 }
 
@@ -41,7 +41,6 @@ void jugar_ahorcado(Sockt_cli *skt){
 	char s[32];
     char *input = s;
     size_t size = 10;
-    size_t input_len; 
 	sockt_cli_read(skt, buf, 3);
 	uint8_t pre_pal_len[2];
 	pre_pal_len[0] = buf[1];
@@ -53,7 +52,7 @@ void jugar_ahorcado(Sockt_cli *skt){
 	uint8_t intentos = (uint8_t)buf[0];
 	juego_print(&buf[3], intentos);
 	while(intentos < 128){
-		input_len = getline(&input, &size, stdin);
+		size_t input_len = getline(&input, &size, stdin);
 		for (int i = 0; i < input_len-1; ++i){
 			intentos = adivinar_char(skt, &input[i], pal_len);
 		}
