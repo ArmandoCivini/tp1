@@ -9,7 +9,7 @@ void juego_print(char *pal, uint8_t intentos){
 }
 
 void terminar_partida_perder(char *pal){
-	printf("Perdiste! la palabra era: '%s'\n", pal);
+	printf("Perdiste! La palabra secreta era: '%s'\n", pal);
 }
 
 void terminar_partida_ganar(){
