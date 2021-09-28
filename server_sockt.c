@@ -35,6 +35,7 @@ void sockt_srv_accept(Sockt_srv *skt){
 	}
 	skt->fd_act = accept(skt->fd,(struct sockaddr *)&cli_act, &len);
 	if (skt->fd_act == -1){
+		close(skt->fd);
 		perror("falla en aceptar");
 		exit(1);
 	}
@@ -43,6 +44,8 @@ void sockt_srv_accept(Sockt_srv *skt){
 void sockt_srv_read(Sockt_srv *skt, char *buf, size_t exp_len){
 	int bytes = recv(skt->fd_act, buf, exp_len, 0);
 	if (bytes == -1){
+		close(skt->fd_act);
+		close(skt->fd);
 		perror("falla al recivir mensaje");
 		exit(1);
 	}
@@ -50,6 +53,8 @@ void sockt_srv_read(Sockt_srv *skt, char *buf, size_t exp_len){
 	while (bytes_sum < exp_len){
 		bytes = recv(skt->fd_act, &buf[bytes_sum], exp_len-bytes_sum, 0);
 		if (bytes == -1){
+			close(skt->fd_act);
+			close(skt->fd);
 			perror("falla al recivir mensaje");
 			exit(1);
 		}
@@ -61,6 +66,8 @@ void sockt_srv_read(Sockt_srv *skt, char *buf, size_t exp_len){
 void sockt_srv_write(Sockt_srv *skt, char *buf, size_t exp_len){
 	int bytes = send(skt->fd_act, buf, exp_len, 0);
 	if (bytes == -1){
+		close(skt->fd_act);
+		close(skt->fd);
 		perror("falla al enviar mensaje");
 		exit(1);
 	}
@@ -68,6 +75,8 @@ void sockt_srv_write(Sockt_srv *skt, char *buf, size_t exp_len){
 	while (bytes_sum < exp_len){
 		bytes = send(skt->fd_act, &buf[bytes_sum], exp_len-bytes_sum, 0);
 		if (bytes == -1){
+			close(skt->fd_act);
+			close(skt->fd);
 			perror("falla al enviar mensaje");
 			exit(1);
 		}
@@ -76,6 +85,8 @@ void sockt_srv_write(Sockt_srv *skt, char *buf, size_t exp_len){
 }
 
 void sockt_srv_destroy(Sockt_srv *skt){
-	close(skt->fd_act);
+	if (skt->fd_act != -1){
+		close(skt->fd_act);
+	}
 	close(skt->fd);
 }
