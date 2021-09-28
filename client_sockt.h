@@ -15,8 +15,10 @@ typedef struct Sockt_cli{
 
 void sockt_cli_init(Sockt_cli *skt, char *host, uint16_t port);
 
+//lee del socket y garantiza leer exp_len bytes y los pone en el buf
 void sockt_cli_read(Sockt_cli *skt, char *buf, size_t exp_len);
 
+//escribe al socket y garantiza escribir exp_len bytes del buf
 void sockt_cli_write(Sockt_cli *skt, char *buf, size_t exp_len);
 
 void sockt_cli_destroy(Sockt_cli *skt);

@@ -30,7 +30,7 @@ void sockt_srv_init(Sockt_srv *skt, uint16_t port, int max_q){
 void sockt_srv_accept(Sockt_srv *skt){
 	struct sockaddr_in *cli_act;
 	unsigned int len = (socklen_t)sizeof(cli_act);
-	if (skt->fd_act != -1){
+	if (skt->fd_act != -1){ //cierro fd ant en caso de haber uno
 		close(skt->fd_act);
 	}
 	skt->fd_act = accept(skt->fd,(struct sockaddr *)&cli_act, &len);
@@ -49,7 +49,7 @@ void sockt_srv_read(Sockt_srv *skt, char *buf, size_t exp_len){
 		perror("falla al recivir mensaje");
 		exit(1);
 	}
-	int bytes_sum = bytes;
+	int bytes_sum = bytes; //bytes leidos hasta ahora
 	while (bytes_sum < exp_len){
 		bytes = recv(skt->fd_act, &buf[bytes_sum], exp_len-bytes_sum, 0);
 		if (bytes == -1){
@@ -71,7 +71,7 @@ void sockt_srv_write(Sockt_srv *skt, char *buf, size_t exp_len){
 		perror("falla al enviar mensaje");
 		exit(1);
 	}
-	int bytes_sum = bytes;
+	int bytes_sum = bytes; //bytes leidos hasta ahora
 	while (bytes_sum < exp_len){
 		bytes = send(skt->fd_act, &buf[bytes_sum], exp_len-bytes_sum, 0);
 		if (bytes == -1){

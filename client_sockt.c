@@ -40,7 +40,7 @@ void sockt_cli_read(Sockt_cli *skt, char *buf, size_t exp_len){
 		perror("falla al recivir mensaje");
 		exit(1);
 	}
-	int bytes_sum = bytes;
+	int bytes_sum = bytes; //bytes enviados hasta ahora
 	while (bytes_sum < exp_len){
 		bytes = recv(skt->fd, &buf[bytes_sum], exp_len-bytes_sum, 0);
 		if (bytes == -1){
@@ -59,7 +59,7 @@ void sockt_cli_write(Sockt_cli *skt, char *buf, size_t exp_len){
 		perror("falla al enviar mensaje");
 		exit(1);
 	}
-	int bytes_sum = bytes;
+	int bytes_sum = bytes; //bytes enviados hasta ahora
 	while (bytes_sum < exp_len){
 		bytes = send(skt->fd, &buf[bytes_sum], exp_len-bytes_sum, 0);
 		if (bytes == -1){
