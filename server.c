@@ -54,6 +54,9 @@ void empezar_juego(char *file, int port, int intentos){
 	int derrotas = 0;
 	FILE *fil = fopen(file, "r");
 	while ((len = getline(&pal, &size, fil)) != -1){
+		if (pal[0] == '\n'){
+			continue;
+		}
 		pal[len-1] = '\0';
 		ahorcado_init(&aho, pal, intentos);
 		sockt_srv_accept(&skt);
