@@ -4,23 +4,27 @@
 #include <stdio.h>
 #define ERROR_NO -1
 #define ULTIMO_BIT 128
-#define BUFSIZE 1000
 #define ERROR_NO_U8 255
+#define JUEGO_MSG_1 "Palabra secreta: %s\n"
+#define JUEGO_MSG_2 "Te quedan %d intentos\n"
+#define JUEGO_MSG_3 "Ingrese letra: \n"
+#define PERDER_MSG "Perdiste! La palabra secreta era: '%s'\n"
+#define GANAR_MSG "Ganaste!!\n"
+#define ARG_ERROR_MSG "argumentos insuficientes"
+#define BUFSIZE_PROTOCOLO 3
 
 
 void juego_print(char *pal, uint8_t intentos){
-	printf("Palabra secreta: %s\n", pal);
 	int intent_p = intentos;
-	printf("Te quedan %d intentos\n", intent_p);
-	printf("Ingrese letra: \n");
+	printf(JUEGO_MSG_1 JUEGO_MSG_2 JUEGO_MSG_3, pal, intent_p);
 }
 
 void terminar_partida_perder(char *pal){
-	printf("Perdiste! La palabra secreta era: '%s'\n", pal);
+	printf(PERDER_MSG, pal);
 }
 
 void terminar_partida_ganar(){
-	printf("Ganaste!!\n");
+	printf(GANAR_MSG);
 }
 
 uint8_t adivinar_char(Sockt *skt, char *c){
@@ -47,8 +51,8 @@ uint8_t adivinar_char(Sockt *skt, char *c){
 }
 
 int protocolo_mensajes(Sockt *skt, uint8_t *intentos, char **palabra){
-	char buf[3];
-	sockt_read(skt, buf, 3);
+	char buf[BUFSIZE_PROTOCOLO];
+	sockt_read(skt, buf, BUFSIZE_PROTOCOLO);
 	uint8_t pre_pal_len[2];
 	pre_pal_len[0] = buf[1];
 	pre_pal_len[1] = buf[2];
@@ -98,8 +102,8 @@ int main(int argc, char *argv[]){
 	int err;
 	int fd;
 	if (argc < 2){
-		perror("argumentos insuficientes");
-		return -1;
+		perror(ARG_ERROR_MSG);
+		return ERROR_NO;
 	}
 	Sockt_connect skt_connect;
 	Sockt skt;

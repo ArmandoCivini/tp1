@@ -7,8 +7,8 @@
 #include <sys/socket.h>
 #include <stdbool.h>
 #define h_addr  h_addr_list[0]
-
-
+#define ADDINFO_ERROR_MSG "getaddrinfo error"
+#define CONECCION_ERROR_MSG "falla de conexion"
 
 int sockt_connect_init(Sockt_connect *skt, char *host, char *port){
 	struct addrinfo hints;
@@ -23,7 +23,7 @@ int sockt_connect_init(Sockt_connect *skt, char *host, char *port){
 	err = getaddrinfo(host, port, &hints, &resultado);
 
 	if (err != 0) {
-    	perror("getaddrinfo error");
+    	perror(ADDINFO_ERROR_MSG);
     	freeaddrinfo(resultado);
     	return -1;
 	}
@@ -54,7 +54,7 @@ int sockt_connect_connection(Sockt_connect *skt){
    	}
 
    	if (conexion_exitosa == false){
-   		perror("falla de conexion");
+   		perror(CONECCION_ERROR_MSG);
    		return -1;
    	}
    	return fd;

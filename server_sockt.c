@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #define ERROR_NO -1
+#define ADDINFO_ERROR_MSG "getaddrinfo error"
+#define CREAR_ERROR_MSG "falla al crear socket"
+#define BIND_ERROR_MSG "falla de bind"
+#define LISTEN_ERROR_MSG "falla al escuchar"
+#define ACCEPT_ERROR_MSG "falla en aceptar"
 
 int sockt_srv_init(Sockt_srv *skt, char *port, int max_q){
 	struct addrinfo hints;
@@ -20,20 +25,20 @@ int sockt_srv_init(Sockt_srv *skt, char *port, int max_q){
 
 	err = getaddrinfo(NULL, port, &hints, &ptr);
 	if (err != 0) {
-    	perror("getaddrinfo error");
+    	perror(ADDINFO_ERROR_MSG);
       return ERROR_NO;
    }
 	fd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 
 	if (fd == -1) {
-		perror("falla al crear socket");
+		perror(CREAR_ERROR_MSG);
 		freeaddrinfo(ptr);
 		return ERROR_NO;
 	}
 
 	err = bind(fd, ptr->ai_addr, ptr->ai_addrlen);
 	if (err == -1) {
-    	perror("falla de bind");
+    	perror(BIND_ERROR_MSG);
     	close(fd);
     	freeaddrinfo(ptr);
     	return ERROR_NO;
@@ -42,7 +47,7 @@ int sockt_srv_init(Sockt_srv *skt, char *port, int max_q){
 
 	err = listen(fd, max_q);
 	if (err == -1) {
-    	perror("error al escuchar");
+    	perror(LISTEN_ERROR_MSG);
     	close(fd);
     	return ERROR_NO;
 	}
@@ -57,7 +62,7 @@ int sockt_srv_accept(Sockt_srv *skt){
 	int new_fd;
 	new_fd = accept(skt->fd,(struct sockaddr *)&cli_act, &len);
 	if (new_fd == -1){
-		perror("falla en aceptar");
+		perror(ACCEPT_ERROR_MSG);
 	}
 	return new_fd;
 }

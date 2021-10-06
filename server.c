@@ -8,8 +8,11 @@
 #define CARACTER 1
 #define ULTIMO_BIT 128
 #define ERROR_NO -1
-
-
+#define RESUMEN "Resumen:\n"
+#define VICTORIAS "	Victorias: %d\n"
+#define DERROTAS "	Derrotas: %d\n"
+#define ARCH_ERROR_MSG "falla al abrir el archivo"
+#define ARG_ERROR_MSG "argumentos insuficientes"
 
 
 void servidor_init(Servidor *servidor, Sockt_srv *skt_srv,
@@ -103,9 +106,7 @@ bool servidor_juego_loop(Servidor *servidor, uint16_t len){
 }
 
 void print_recrd(Servidor *servidor){
-	printf("Resumen:\n");
-	printf("	Victorias: %d\n", servidor->victorias);
-	printf("	Derrotas: %d\n", servidor->derrotas);
+	printf(RESUMEN VICTORIAS DERROTAS, servidor->victorias, servidor->derrotas);
 }
 
 int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
@@ -145,7 +146,7 @@ void empezar_juego(char *file, char *port, int intentos){
 	FILE *fil = fopen(file, "r");
 	if (fil == NULL){
 		sockt_srv_destroy(&skt_srv);
-		perror("falla al abrir el archivo");
+		perror(ARCH_ERROR_MSG);
 		return;
 	}
 	ahorcado_init(&ahorcado, "", intentos);
@@ -166,7 +167,7 @@ void empezar_juego(char *file, char *port, int intentos){
 
 int main(int argc, char *argv[]){
 	if (argc < 1){
-		perror("argumentos insuficientes");
+		perror(ARG_ERROR_MSG);
 		return -1;
 	}
 	empezar_juego(argv[3], argv[1], atoi(argv[2])); 
