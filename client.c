@@ -82,7 +82,7 @@ void jugar_ahorcado(Sockt *skt){
 	while(intentos < ULTIMO_BIT){ //checkeo si el juego terminó
 		size_t input_len = getline(&input, &size, stdin);
 		if (input_len == 1){
-			juego_print(palabra, intentos);
+			continue;
 		}
 		for (int i = 0; i < input_len-1; ++i){
 			if (intentos >= ULTIMO_BIT){ //checkeo si el juego terminó
