@@ -24,7 +24,7 @@ void terminar_partida_perder(char *pal){
 }
 
 void terminar_partida_ganar(){
-	printf(GANAR_MSG);
+	printf("%s",GANAR_MSG);
 }
 
 uint8_t adivinar_char(Sockt *skt, char *c){
