@@ -111,6 +111,7 @@ void print_recrd(Servidor *servidor){
 int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
 	char *pal_revelada = malloc(sizeof(char) * len);
 	if (pal[0] == '\n'){
+		free(pal_revelada);
 		return 0; //si hay linea vacia sigue
 	}
 	pal[len-1] = '\0';
