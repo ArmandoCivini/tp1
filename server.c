@@ -62,7 +62,7 @@ void servidor_destroy(Servidor *servidor){
 	ahorcado_destroy(servidor->ahorcado);
 }
 
-void enviar_msg(Servidor *servidor, char *pal, uint16_t len){
+void servidor_enviar_msg(Servidor *servidor, char *pal, uint16_t len){
 	char len_pal[2];
 	char *intentos = (char *)&servidor->intentos;
 	uint16_t len_pal_ns = htons(len); //conversion x endianess
@@ -79,7 +79,7 @@ void crear_fill(char *pal, int len){
 	pal[len] = '\0';
 }
 
-bool jugar_letra(Servidor *servidor, char *revelados, char caracter){
+bool servidor_jugar_letra(Servidor *servidor, char *revelados, char caracter){
 	int intentos;
 	bool ganar;
 	ganar = ahorcado_probar(servidor->ahorcado, caracter, revelados, &intentos);
@@ -97,9 +97,9 @@ bool servidor_juego_loop(Servidor *servidor, uint16_t len){
 	while(ganaste == false && intentos < ULTIMO_BIT){
 		sockt_read(servidor->skt, buf, 1);
 		
-		ganaste = jugar_letra(servidor, revelados, buf[0]);
+		ganaste = servidor_jugar_letra(servidor, revelados, buf[0]);
 
-		enviar_msg(servidor, revelados, len-1);
+		servidor_enviar_msg(servidor, revelados, len-1);
 		intentos = servidor->intentos;
 	}
 	return ganaste;
@@ -124,7 +124,7 @@ int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
 		return ERROR_NO;
 	}
 	crear_fill(pal_revelada, len-1);
-	enviar_msg(servidor, pal_revelada, len-1);
+	servidor_enviar_msg(servidor, pal_revelada, len-1);
 	if(servidor_juego_loop(servidor, len)){
 		servidor_victoria(servidor);
 	} else{
