@@ -5,88 +5,65 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#define ERROR_NO -1
 
+int sockt_srv_init(Sockt_srv *skt, char *port, int max_q){
+	struct addrinfo hints;
+	struct addrinfo *ptr;
+	int err = 0;
+	int fd;
 
-void sockt_srv_init(Sockt_srv *skt, uint16_t port, int max_q){
-	skt->fd_act = -1;
-	struct sockaddr_in addr;
-	skt->fd = socket(AF_INET, SOCK_STREAM, 0);
-	if(skt->fd == -1){
-		perror("inicialización del socket");
-		exit(1);
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	err = getaddrinfo(NULL, port, &hints, &ptr);
+	if (err != 0) {
+    	perror("getaddrinfo error");
+      return ERROR_NO;
+   }
+	fd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+
+	if (fd == -1) {
+		perror("falla al crear socket");
+		freeaddrinfo(ptr);
+		return ERROR_NO;
 	}
-	memset((char *)&addr,0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;
-	socklen_t sockaddr_size = (socklen_t)sizeof(struct sockaddr);
-	if ( bind(skt->fd,(struct sockaddr *)&addr, sockaddr_size) == -1 ){
-		perror("union socket server");
-		exit(1);
+
+	err = bind(fd, ptr->ai_addr, ptr->ai_addrlen);
+	if (err == -1) {
+    	perror("falla de bind");
+    	close(fd);
+    	freeaddrinfo(ptr);
+    	return ERROR_NO;
 	}
-	listen(skt->fd, max_q);
+	freeaddrinfo(ptr);
+
+	err = listen(fd, max_q);
+	if (err == -1) {
+    	perror("error al escuchar");
+    	close(fd);
+    	return ERROR_NO;
+	}
+
+   skt->fd = fd;
+   return 0;
 }
 
-void sockt_srv_accept(Sockt_srv *skt){
+int sockt_srv_accept(Sockt_srv *skt){
 	struct sockaddr_in *cli_act;
 	unsigned int len = (socklen_t)sizeof(cli_act);
-	if (skt->fd_act != -1){ //cierro fd ant en caso de haber uno
-		close(skt->fd_act);
-	}
-	skt->fd_act = accept(skt->fd,(struct sockaddr *)&cli_act, &len);
-	if (skt->fd_act == -1){
-		close(skt->fd);
+	int new_fd;
+	new_fd = accept(skt->fd,(struct sockaddr *)&cli_act, &len);
+	if (new_fd == -1){
 		perror("falla en aceptar");
-		exit(1);
 	}
+	return new_fd;
 }
 
-void sockt_srv_read(Sockt_srv *skt, char *buf, size_t exp_len){
-	int bytes = recv(skt->fd_act, buf, exp_len, 0);
-	if (bytes == -1){
-		close(skt->fd_act);
-		close(skt->fd);
-		perror("falla al recivir mensaje");
-		exit(1);
-	}
-	int bytes_sum = bytes; //bytes leidos hasta ahora
-	while (bytes_sum < exp_len){
-		bytes = recv(skt->fd_act, &buf[bytes_sum], exp_len-bytes_sum, 0);
-		if (bytes == -1){
-			close(skt->fd_act);
-			close(skt->fd);
-			perror("falla al recivir mensaje");
-			exit(1);
-		}
-		bytes_sum += bytes;
-	}
-	buf[exp_len] = '\0';
-}
-
-void sockt_srv_write(Sockt_srv *skt, char *buf, size_t exp_len){
-	int bytes = send(skt->fd_act, buf, exp_len, 0);
-	if (bytes == -1){
-		close(skt->fd_act);
-		close(skt->fd);
-		perror("falla al enviar mensaje");
-		exit(1);
-	}
-	int bytes_sum = bytes; //bytes leidos hasta ahora
-	while (bytes_sum < exp_len){
-		bytes = send(skt->fd_act, &buf[bytes_sum], exp_len-bytes_sum, 0);
-		if (bytes == -1){
-			close(skt->fd_act);
-			close(skt->fd);
-			perror("falla al enviar mensaje");
-			exit(1);
-		}
-		bytes_sum += bytes;
-	}
-}
 
 void sockt_srv_destroy(Sockt_srv *skt){
-	if (skt->fd_act != -1){
-		close(skt->fd_act);
-	}
+	shutdown(skt->fd, SHUT_RDWR);
 	close(skt->fd);
 }

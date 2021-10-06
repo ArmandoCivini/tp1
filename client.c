@@ -1,6 +1,12 @@
 #include "client.h"
-#include "client_sockt.h"
+#include "common_sockt.h"
+#include "client_sockt_connect.h"
 #include <stdio.h>
+#define ERROR_NO -1
+#define ULTIMO_BIT 128
+#define BUFSIZE 1000
+#define ERROR_NO_U8 255
+
 
 void juego_print(char *pal, uint8_t intentos){
 	printf("Palabra secreta: %s\n", pal);
@@ -17,64 +23,98 @@ void terminar_partida_ganar(){
 	printf("Ganaste!!\n");
 }
 
-uint8_t adivinar_char(Sockt_cli *skt, char *c, const uint16_t pal_len){
-	sockt_cli_write(skt, c, 1);
-	char *buf = malloc((pal_len+4)*sizeof(char));
-	sockt_cli_read(skt, buf, pal_len+3);
-	buf[pal_len+3] = '\0';
-	uint8_t intentos = (uint8_t)buf[0];
-	buf[pal_len+3] = '\0';
-	if (intentos < 128){
-		juego_print(&buf[3], intentos);
+uint8_t adivinar_char(Sockt *skt, char *c){
+	char *palabra = NULL;
+	uint8_t intentos;
+	sockt_write(skt, c, 1);
+
+	int err = protocolo_mensajes(skt, &intentos, &palabra);
+	if (err == -1){
+		return ERROR_NO_U8;
+	}
+
+	if (intentos < ULTIMO_BIT){
+		juego_print(palabra, intentos);
 	} else{
-		if (intentos == 128){
-			terminar_partida_perder(&buf[3]);
+		if (intentos == ULTIMO_BIT){
+			terminar_partida_perder(palabra);
 		} else{
 			terminar_partida_ganar();
 		}
 	}
-	free(buf);
+	free(palabra);
 	return intentos; //para comunicar si partida terminó
 }
 
-
-void jugar_ahorcado(Sockt_cli *skt){
-	char buf[32];
-	char s[32];
-    char *input = s;
-    size_t size = 10;
-	sockt_cli_read(skt, buf, 3);
+int protocolo_mensajes(Sockt *skt, uint8_t *intentos, char **palabra){
+	char buf[3];
+	sockt_read(skt, buf, 3);
 	uint8_t pre_pal_len[2];
 	pre_pal_len[0] = buf[1];
 	pre_pal_len[1] = buf[2];
 	uint16_t pal_len_net = *(uint16_t *)pre_pal_len;
 	uint16_t pal_len = ntohs(pal_len_net); //conversion x endianess
-	sockt_cli_read(skt, &buf[3], pal_len);
-	buf[pal_len+3] = '\0';
-	uint8_t intentos = (uint8_t)buf[0];
-	juego_print(&buf[3], intentos);
-	while(intentos < 128){ //checkeo si el juego terminó
+	*palabra = (char *)malloc(sizeof(char) * (pal_len+1));
+	if (*palabra==NULL){
+		return ERROR_NO;
+	}
+	sockt_read(skt, *palabra, pal_len);
+	palabra[pal_len] = '\0';
+	*intentos = (uint8_t)buf[0];
+	return 0;
+}
+
+void jugar_ahorcado(Sockt *skt){
+    char *input = NULL;
+    size_t size = 0;
+    uint8_t intentos;
+    char *palabra = NULL;
+    int err = protocolo_mensajes(skt, &intentos, &palabra);
+    if (err == -1){
+    	return;
+    }
+
+	juego_print(palabra, intentos);
+	while(intentos < ULTIMO_BIT){ //checkeo si el juego terminó
 		size_t input_len = getline(&input, &size, stdin);
 		if (input_len == 1){
-			juego_print(&buf[3], intentos);
+			juego_print(palabra, intentos);
 		}
 		for (int i = 0; i < input_len-1; ++i){
-			if (intentos >= 128){ //checkeo si el juego terminó
+			if (intentos >= ULTIMO_BIT){ //checkeo si el juego terminó
 				break;
 			}
-			intentos = adivinar_char(skt, &input[i], pal_len);
+			intentos = adivinar_char(skt, &input[i]);
+			if (intentos == ERROR_NO_U8){
+				break;
+			}
 		}
 	}
+	free(input);
+	free(palabra);
 }
 
 int main(int argc, char *argv[]){
+	int err;
+	int fd;
 	if (argc < 2){
 		perror("argumentos insuficientes");
-		exit(1);
+		return -1;
 	}
-	Sockt_cli skt;
-	sockt_cli_init(&skt, argv[1], (uint16_t)atoi(argv[2]));
+	Sockt_connect skt_connect;
+	Sockt skt;
+	err = sockt_connect_init(&skt_connect, argv[1], argv[2]);
+	if (err == -1){
+		return ERROR_NO;
+	}
+	fd = sockt_connect_connection(&skt_connect);
+	if (fd == -1){
+		sockt_connect_destroy(&skt_connect);
+		return ERROR_NO;
+	}
+	sockt_init(&skt, fd);
 	jugar_ahorcado(&skt);
-	sockt_cli_destroy(&skt);
+	sockt_destroy(&skt);
+	sockt_connect_destroy(&skt_connect);
 	return 0;
 }

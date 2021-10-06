@@ -7,6 +7,7 @@
 typedef struct Ahorcado {
 	char *pal;
 	int len;
+	int intentos_totales;
 	int intentos;
 	char *revelados;
 } Ahorcado;
@@ -14,6 +15,8 @@ typedef struct Ahorcado {
 void ahorcado_init(Ahorcado *aho, const char *p, int intent);
 
 bool ahorcado_probar(Ahorcado *aho, const char c, char *revel, int *intent);
+
+int nueva_palabra(Ahorcado *ahorcado, char *palabra);
 
 void ahorcado_destroy(Ahorcado *aho);
 

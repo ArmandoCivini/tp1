@@ -1,18 +1,72 @@
 #include "server.h"
 #include "server_sockt.h"
+#include "common_sockt.h"
 #include "server_ahorcado.h"
 #include <stdio.h>
 #include <stdbool.h>
+#define MAX_Q 100
+#define CARACTER 1
+#define ULTIMO_BIT 128
+#define ERROR_NO -1
 
 
-void enviar_msg(Sockt_srv *skt, uint8_t intentos, char *pal, uint16_t len){
-	char *intent, len_pal[2];
-	intent = (char *)&intentos;
+
+
+void servidor_init(Servidor *servidor, Sockt_srv *skt_srv,
+Ahorcado *ahorcado, uint8_t intentos){
+	servidor->ahorcado = ahorcado;
+	servidor->skt_srv = skt_srv;
+	servidor->victorias = 0;
+	servidor->derrotas = 0;
+	servidor->intentos = intentos;
+	servidor->skt = NULL;
+}
+
+void servidor_victoria(Servidor *servidor){
+	++servidor->victorias;
+}
+
+void servidor_derrota(Servidor *servidor){
+	++servidor->derrotas;
+}
+
+int servidor_new_sockt(Servidor *servidor){
+	if (servidor->skt != NULL){
+		sockt_destroy(servidor->skt);
+		free(servidor->skt);
+	}
+	servidor->skt = malloc(sizeof(Sockt));
+	if (servidor->skt == NULL){
+		return ERROR_NO;
+	}
+	int fd = sockt_srv_accept(servidor->skt_srv);
+	if (fd == -1){
+		return ERROR_NO;
+	}
+	sockt_init(servidor->skt, fd);
+	return 0;
+}
+
+void servidor_cambiar_palabra(Servidor *servidor, char *pal){
+	int intentos_totales = nueva_palabra(servidor->ahorcado, pal);
+	servidor->intentos = intentos_totales;
+}
+
+void servidor_destroy(Servidor *servidor){
+	sockt_destroy(servidor->skt);
+	free(servidor->skt);
+	sockt_srv_destroy(servidor->skt_srv);
+	ahorcado_destroy(servidor->ahorcado);
+}
+
+void enviar_msg(Servidor *servidor, char *pal, uint16_t len){
+	char len_pal[2];
+	char *intentos = (char *)&servidor->intentos;
 	uint16_t len_pal_ns = htons(len); //conversion x endianess
 	memcpy(len_pal, &len_pal_ns, 2);
-	sockt_srv_write(skt, intent, 1);
-	sockt_srv_write(skt, len_pal, 2);
-	sockt_srv_write(skt, pal, (size_t)len);
+	sockt_write(servidor->skt, intentos, 1);
+	sockt_write(servidor->skt, len_pal, 2);
+	sockt_write(servidor->skt, pal, (size_t)len);
 }
 
 void crear_fill(char *pal, int len){
@@ -22,64 +76,96 @@ void crear_fill(char *pal, int len){
 	pal[len] = '\0';
 }
 
-bool juego_loop(Sockt_srv *skt, Ahorcado *aho, int intent, uint16_t len){
-	char buf[1], revel[len+1];
+bool jugar_letra(Servidor *servidor, char *revelados, char caracter){
+	int intentos;
+	bool ganaste = ahorcado_probar(servidor->ahorcado, caracter, revelados, &intentos);
+	if (intentos == 0 || ganaste){ //checkea si juego terminó
+		intentos += ULTIMO_BIT;
+	}
+	servidor->intentos = intentos;
+	return ganaste;
+}
+
+bool servidor_juego_loop(Servidor *servidor, uint16_t len){
+	char buf[CARACTER], revelados[len+1];
 	bool ganaste = false;
-	while(ganaste == false && intent < 128){
-		sockt_srv_read(skt, buf, 1);
-		ganaste = ahorcado_probar(aho, buf[0], revel, &intent);
-		if (intent == 0 || ganaste){ //checkea si juego terminó
-			intent += 128;
-		}
-		enviar_msg(skt, (uint8_t)intent, revel, (uint16_t)(len-1));
+	int intentos = servidor->intentos;
+	while(ganaste == false && intentos < ULTIMO_BIT){
+		sockt_read(servidor->skt, buf, 1);
+		
+		ganaste = jugar_letra(servidor, revelados, buf[0]);
+
+		enviar_msg(servidor, revelados, len-1);
+		intentos = servidor->intentos;
 	}
 	return ganaste;
 }
 
-void print_recrd(int victorias, int derrotas){
+void print_recrd(Servidor *servidor){
 	printf("Resumen:\n");
-	printf("	Victorias: %d\n", victorias);
-	printf("	Derrotas: %d\n", derrotas);
+	printf("	Victorias: %d\n", servidor->victorias);
+	printf("	Derrotas: %d\n", servidor->derrotas);
 }
 
-void empezar_juego(char *file, int port, int intentos){
-	Sockt_srv skt;
-	Ahorcado aho;
-	char s[32];
-	char *pal = s;
-	size_t size = 10;
-	char pal_revelada[32];
-	ssize_t len;
-	sockt_srv_init(&skt, (uint16_t)port, 100);
-	int victorias = 0;
-	int derrotas = 0;
-	FILE *fil = fopen(file, "r");
-	while ((len = getline(&pal, &size, fil)) != -1){
-		if (pal[0] == '\n'){
-			continue; //si hay linea vacia sigue
-		}
-		pal[len-1] = '\0';
-		ahorcado_init(&aho, pal, intentos);
-		sockt_srv_accept(&skt); //acepta a 1 cliente por palabra
-		crear_fill(pal_revelada, len-1);
-		enviar_msg(&skt, (uint8_t)intentos, pal_revelada, (uint16_t)(len-1));
-		if(juego_loop(&skt, &aho, intentos, (uint16_t)len)){
-			++victorias;
-		} else{
-			++derrotas;
-		}
-		ahorcado_destroy(&aho);
+int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
+	char pal_revelada[len];
+	if (pal[0] == '\n'){
+		return 0; //si hay linea vacia sigue
 	}
+	pal[len-1] = '\0';
+	servidor_cambiar_palabra(servidor, pal);
+
+	int err = servidor_new_sockt(servidor);
+	if (err == ERROR_NO){
+		return ERROR_NO;
+	}
+	crear_fill(pal_revelada, len-1);
+	enviar_msg(servidor, pal_revelada, len-1);
+	if(servidor_juego_loop(servidor, len)){
+		servidor_victoria(servidor);
+	} else{
+		servidor_derrota(servidor);
+	}
+	return 0;
+}
+
+void empezar_juego(char *file, char *port, int intentos){
+	Sockt_srv skt_srv;
+	Ahorcado ahorcado;
+	Servidor servidor;
+	int err;
+	char *pal = NULL;
+	size_t size = 0;
+	ssize_t len;
+	sockt_srv_init(&skt_srv, port, MAX_Q);
+
+	FILE *fil = fopen(file, "r");
+	if (fil == NULL){
+		sockt_srv_destroy(&skt_srv);
+		perror("falla al abrir el archivo");
+		return;
+	}
+	ahorcado_init(&ahorcado, "", intentos);
+
+	servidor_init(&servidor, &skt_srv, &ahorcado, (uint8_t)intentos);
+
+	while ((len = getline(&pal, &size, fil)) != -1){
+		err = servidor_palabras_loop(&servidor, pal, len);
+		if (err == ERROR_NO){
+			break;
+		}
+	}
+	free(pal);
 	fclose(fil);
-	print_recrd(victorias, derrotas);
-	sockt_srv_destroy(&skt);
+	print_recrd(&servidor);
+	servidor_destroy(&servidor);
 }
 
 int main(int argc, char *argv[]){
 	if (argc < 1){
 		perror("argumentos insuficientes");
-		exit(1);
+		return -1;
 	}
-	empezar_juego(argv[3], atoi(argv[1]), atoi(argv[2])); 
+	empezar_juego(argv[3], argv[1], atoi(argv[2])); 
 	return 0;
 }

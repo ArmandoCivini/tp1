@@ -1,7 +1,8 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
-#include "client_sockt.h"
+#include "common_sockt.h"
+#include "client_sockt_connect.h"
 #include <stdio.h>
 
 //imprime interfaz para jugar
@@ -13,10 +14,12 @@ void terminar_partida_perder(char *pal);
 //imprime pantalla de victoria
 void terminar_partida_ganar();
 
-//maneja la logica de enviar al server el caracter y imprime pantalla correspondiente
-uint8_t adivinar_char(Sockt_cli *skt, char *c, const uint16_t pal_len);
+int protocolo_mensajes(Sockt *skt, uint8_t *intentos, char **palabra);
 
-void jugar_ahorcado(Sockt_cli *skt);
+//maneja la logica de enviar al server el caracter y imprime pantalla correspondiente
+uint8_t adivinar_char(Sockt *skt, char *c);
+
+void jugar_ahorcado(Sockt *skt);
 
 int main(int argc, char *argv[]);
 

@@ -4,46 +4,64 @@
 #include <stdlib.h>
 
 
-void ahorcado_init(Ahorcado *aho, const char *p, int intent){
+void ahorcado_init(Ahorcado *ahorcado, const char *p, int intentos){
 	int largo = strlen(p);
-	aho->len = largo;
-	aho->pal = malloc(largo+1);
-	strncpy(aho->pal, p, largo+1);
-	aho->intentos = intent;
-	char *inten = malloc(largo+1);
+	ahorcado->len = largo;
+	ahorcado->pal = malloc(largo+1);
+	strncpy(ahorcado->pal, p, largo+1);
+	ahorcado->intentos = intentos;
+	ahorcado->intentos_totales = intentos;
+	char *pal_escondida = malloc(largo+1);
 	for (int i = 0; i < largo; ++i){
-		inten[i] = '_';
+		pal_escondida[i] = '_';
 	}
-	inten[largo] = '\0';
-	aho->revelados = inten;
+	pal_escondida[largo] = '\0';
+	ahorcado->revelados = pal_escondida;
 }
 
-bool ahorcado_probar(Ahorcado *aho, const char c, char *revel, int *intent){
+bool ahorcado_probar(Ahorcado *ahorcado, const char c, char *revelado, int *intentos){
 	bool ganaste = true;	
 	bool correcto = false;
-	for (int i = 0; i < aho->len; ++i){
-		if (aho->pal[i] == c){
-			aho->revelados[i] = c;
+	for (int i = 0; i < ahorcado->len; ++i){
+		if (ahorcado->pal[i] == c){
+			ahorcado->revelados[i] = c;
 			correcto = true;
 		}
-		if(aho->revelados[i] == '_'){
+		if(ahorcado->revelados[i] == '_'){
 			ganaste = false;
 		}
 	}
 	if (!correcto){
-		--aho->intentos;
+		--ahorcado->intentos;
 	}
-	if (aho->intentos == 0){
-		strncpy(revel, aho->pal, aho->len +1);
-		*intent = aho->intentos;
+	if (ahorcado->intentos == 0){
+		strncpy(revelado, ahorcado->pal, ahorcado->len +1);
+		*intentos = ahorcado->intentos;
 		return ganaste;
 	}
-	strncpy(revel, aho->revelados, aho->len +1);
-	*intent = aho->intentos;
+	strncpy(revelado, ahorcado->revelados, ahorcado->len +1);
+	*intentos = ahorcado->intentos;
 	return ganaste; 
 }
 
-void ahorcado_destroy(Ahorcado *aho){
-	free(aho->pal);
-	free(aho->revelados);
+int nueva_palabra(Ahorcado *ahorcado, char *palabra){
+	free(ahorcado->pal);
+	free(ahorcado->revelados);
+	ahorcado->intentos = ahorcado->intentos_totales;
+	int largo = strlen(palabra);
+	ahorcado->len = largo;
+	ahorcado->pal = malloc(largo+1);
+	strncpy(ahorcado->pal, palabra, largo+1);
+	char *pal_escondida = malloc(largo+1);
+	for (int i = 0; i < largo; ++i){
+		pal_escondida[i] = '_';
+	}
+	pal_escondida[largo] = '\0';
+	ahorcado->revelados = pal_escondida;
+	return ahorcado->intentos_totales;
+}
+
+void ahorcado_destroy(Ahorcado *ahorcado){
+	free(ahorcado->pal);
+	free(ahorcado->revelados);
 }
