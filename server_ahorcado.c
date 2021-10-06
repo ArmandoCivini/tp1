@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-
+#define ERROR_NO -1
 
 void ahorcado_init(Ahorcado *ahorcado, const char *p, int intentos){
 	int largo = strlen(p);
@@ -52,8 +52,14 @@ int nueva_palabra(Ahorcado *ahorcado, char *palabra){
 	int largo = strlen(palabra);
 	ahorcado->len = largo;
 	ahorcado->pal = malloc(largo+1);
+	if (ahorcado->pal == NULL){
+		return ERROR_NO;
+	}
 	strncpy(ahorcado->pal, palabra, largo+1);
 	char *pal_escondida = malloc(largo+1);
+	if (pal_escondida == NULL){
+		return ERROR_NO;
+	}
 	for (int i = 0; i < largo; ++i){
 		pal_escondida[i] = '_';
 	}

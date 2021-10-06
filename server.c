@@ -50,9 +50,13 @@ int servidor_new_sockt(Servidor *servidor){
 	return 0;
 }
 
-void servidor_cambiar_palabra(Servidor *servidor, char *pal){
+int servidor_cambiar_palabra(Servidor *servidor, char *pal){
 	int intentos_totales = nueva_palabra(servidor->ahorcado, pal);
+	if (intentos_totales == -1){
+		return ERROR_NO;
+	}
 	servidor->intentos = intentos_totales;
+	return 0;
 }
 
 void servidor_destroy(Servidor *servidor){
@@ -111,14 +115,20 @@ void print_recrd(Servidor *servidor){
 
 int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
 	char *pal_revelada = malloc(sizeof(char) * len);
+	if (pal_revelada == NULL){
+		return ERROR_NO;
+	}
 	if (pal[0] == '\n'){
 		free(pal_revelada);
 		return 0; //si hay linea vacia sigue
 	}
 	pal[len-1] = '\0';
-	servidor_cambiar_palabra(servidor, pal);
-
-	int err = servidor_new_sockt(servidor);
+	int err = servidor_cambiar_palabra(servidor, pal);
+	if (err == -1){
+		free(pal_revelada);
+		return ERROR_NO;
+	}
+	err = servidor_new_sockt(servidor);
 	if (err == ERROR_NO){
 		free(pal_revelada);
 		return ERROR_NO;
