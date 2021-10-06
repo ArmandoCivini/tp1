@@ -78,12 +78,13 @@ void crear_fill(char *pal, int len){
 
 bool jugar_letra(Servidor *servidor, char *revelados, char caracter){
 	int intentos;
-	bool ganaste = ahorcado_probar(servidor->ahorcado, caracter, revelados, &intentos);
-	if (intentos == 0 || ganaste){ //checkea si juego terminó
+	bool ganar;
+	ganar = ahorcado_probar(servidor->ahorcado, caracter, revelados, &intentos);
+	if (intentos == 0 || ganar){ //checkea si juego terminó
 		intentos += ULTIMO_BIT;
 	}
 	servidor->intentos = intentos;
-	return ganaste;
+	return ganar;
 }
 
 bool servidor_juego_loop(Servidor *servidor, uint16_t len){
@@ -108,7 +109,7 @@ void print_recrd(Servidor *servidor){
 }
 
 int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
-	char pal_revelada[len];
+	char *pal_revelada = malloc(sizeof(char) * len);
 	if (pal[0] == '\n'){
 		return 0; //si hay linea vacia sigue
 	}
@@ -118,6 +119,7 @@ int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
 	int err = servidor_new_sockt(servidor);
 	if (err == ERROR_NO){
 		return ERROR_NO;
+		free(pal_revelada);
 	}
 	crear_fill(pal_revelada, len-1);
 	enviar_msg(servidor, pal_revelada, len-1);
@@ -126,6 +128,7 @@ int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
 	} else{
 		servidor_derrota(servidor);
 	}
+	free(pal_revelada);
 	return 0;
 }
 
@@ -133,7 +136,6 @@ void empezar_juego(char *file, char *port, int intentos){
 	Sockt_srv skt_srv;
 	Ahorcado ahorcado;
 	Servidor servidor;
-	int err;
 	char *pal = NULL;
 	size_t size = 0;
 	ssize_t len;
@@ -150,7 +152,7 @@ void empezar_juego(char *file, char *port, int intentos){
 	servidor_init(&servidor, &skt_srv, &ahorcado, (uint8_t)intentos);
 
 	while ((len = getline(&pal, &size, fil)) != -1){
-		err = servidor_palabras_loop(&servidor, pal, len);
+		int err = servidor_palabras_loop(&servidor, pal, len);
 		if (err == ERROR_NO){
 			break;
 		}

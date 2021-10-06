@@ -59,7 +59,7 @@ int protocolo_mensajes(Sockt *skt, uint8_t *intentos, char **palabra){
 		return ERROR_NO;
 	}
 	sockt_read(skt, *palabra, pal_len);
-	palabra[pal_len] = '\0';
+
 	*intentos = (uint8_t)buf[0];
 	return 0;
 }

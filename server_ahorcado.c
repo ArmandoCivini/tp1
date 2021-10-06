@@ -19,7 +19,8 @@ void ahorcado_init(Ahorcado *ahorcado, const char *p, int intentos){
 	ahorcado->revelados = pal_escondida;
 }
 
-bool ahorcado_probar(Ahorcado *ahorcado, const char c, char *revelado, int *intentos){
+bool ahorcado_probar(Ahorcado *ahorcado, 
+const char c, char *revelado, int *intentos){
 	bool ganaste = true;	
 	bool correcto = false;
 	for (int i = 0; i < ahorcado->len; ++i){

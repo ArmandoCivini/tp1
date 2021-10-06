@@ -30,7 +30,6 @@ int sockt_connect_init(Sockt_connect *skt, char *host, char *port){
 
 	skt->resultado = resultado;
 	return 0;
-
 }
 
 int sockt_connect_connection(Sockt_connect *skt){
