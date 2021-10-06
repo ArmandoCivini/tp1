@@ -18,7 +18,7 @@ void terminar_partida_ganar();
 int protocolo_mensajes(Sockt *skt, uint8_t *intentos, char **palabra);
  
 //envia el caracter y imprime pantalla correspondiente
-uint8_t adivinar_char(Sockt *skt, char *c);
+uint8_t adivinar_char(Sockt *skt, char *c, char **palabra);
 
 void jugar_ahorcado(Sockt *skt);
 

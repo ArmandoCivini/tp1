@@ -27,26 +27,25 @@ void terminar_partida_ganar(){
 	printf("%s",GANAR_MSG);
 }
 
-uint8_t adivinar_char(Sockt *skt, char *c){
-	char *palabra = NULL;
+uint8_t adivinar_char(Sockt *skt, char *c, char **palabra){
+	//char *palabra = NULL;
 	uint8_t intentos;
 	sockt_write(skt, c, 1);
 
-	int err = protocolo_mensajes(skt, &intentos, &palabra);
+	int err = protocolo_mensajes(skt, &intentos, palabra);
 	if (err == -1){
 		return ERROR_NO_U8;
 	}
 
 	if (intentos < ULTIMO_BIT){
-		juego_print(palabra, intentos);
+		juego_print(*palabra, intentos);
 	} else{
 		if (intentos == ULTIMO_BIT){
-			terminar_partida_perder(palabra);
+			terminar_partida_perder(*palabra);
 		} else{
 			terminar_partida_ganar();
 		}
 	}
-	free(palabra);
 	return intentos; //para comunicar si partida terminó
 }
 
@@ -58,6 +57,7 @@ int protocolo_mensajes(Sockt *skt, uint8_t *intentos, char **palabra){
 	pre_pal_len[1] = buf[2];
 	uint16_t pal_len_net = *(uint16_t *)pre_pal_len;
 	uint16_t pal_len = ntohs(pal_len_net); //conversion x endianess
+	free(*palabra);
 	*palabra = (char *)malloc(sizeof(char) * (pal_len+1));
 	if (*palabra==NULL){
 		return ERROR_NO;
@@ -88,7 +88,7 @@ void jugar_ahorcado(Sockt *skt){
 			if (intentos >= ULTIMO_BIT){ //checkeo si el juego terminó
 				break;
 			}
-			intentos = adivinar_char(skt, &input[i]);
+			intentos = adivinar_char(skt, &input[i], &palabra);
 			if (intentos == ERROR_NO_U8){
 				break;
 			}
