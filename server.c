@@ -118,8 +118,8 @@ int servidor_palabras_loop(Servidor *servidor, char *pal, uint16_t len){
 
 	int err = servidor_new_sockt(servidor);
 	if (err == ERROR_NO){
-		return ERROR_NO;
 		free(pal_revelada);
+		return ERROR_NO;
 	}
 	crear_fill(pal_revelada, len-1);
 	enviar_msg(servidor, pal_revelada, len-1);
