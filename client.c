@@ -1,6 +1,7 @@
 #include "client.h"
 #include "common_sockt.h"
 #include "client_sockt_connect.h"
+#include "common_protocolo.h"
 #include <stdio.h>
 #define ERROR_NO -1
 #define ULTIMO_BIT 128
@@ -49,24 +50,6 @@ uint8_t adivinar_char(Sockt *skt, char *c, char **palabra){
 	return intentos; //para comunicar si partida terminó
 }
 
-int protocolo_mensajes(Sockt *skt, uint8_t *intentos, char **palabra){
-	char buf[BUFSIZE_PROTOCOLO];
-	sockt_read(skt, buf, BUFSIZE_PROTOCOLO);
-	uint8_t pre_pal_len[2];
-	pre_pal_len[0] = buf[1];
-	pre_pal_len[1] = buf[2];
-	uint16_t pal_len_net = *(uint16_t *)pre_pal_len;
-	uint16_t pal_len = ntohs(pal_len_net); //conversion x endianess
-	free(*palabra);
-	*palabra = (char *)malloc(sizeof(char) * (pal_len+1));
-	if (*palabra==NULL){
-		return ERROR_NO;
-	}
-	sockt_read(skt, *palabra, pal_len);
-
-	*intentos = (uint8_t)buf[0];
-	return 0;
-}
 
 void jugar_ahorcado(Sockt *skt){
     char *input = NULL;
